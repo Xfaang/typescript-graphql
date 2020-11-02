@@ -1,0 +1,23 @@
+{
+  "name": "typescript-graphql",
+  "version": "0.0.0",
+  "description": "Easiest way to convert TypeScript to GraphQL",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xFAANG/typescript-graphql.git"
+  },
+  "keywords": [
+    "TypeScript",
+    "GraphQL"
+  ],
+  "author": "xFAANG Marcin Hagmajer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xFAANG/typescript-graphql/issues"
+  },
+  "homepage": "https://github.com/xFAANG/typescript-graphql#readme"
+}

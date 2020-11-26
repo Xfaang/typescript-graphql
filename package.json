@@ -4,6 +4,9 @@
   "description": "Easiest way to convert TypeScript to GraphQL",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,5 +22,16 @@
   "bugs": {
     "url": "https://github.com/xFAANG/typescript-graphql/issues"
   },
-  "homepage": "https://github.com/xFAANG/typescript-graphql#readme"
+  "homepage": "https://github.com/xFAANG/typescript-graphql#readme",
+  "peerDependencies": {
+    "typescript": "=>14"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.10",
+    "@types/yargs": "^15.0.10",
+    "typescript": "^4.1.2"
+  },
+  "dependencies": {
+    "yargs": "^16.1.1"
+  }
 }

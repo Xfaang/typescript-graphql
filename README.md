@@ -1,5 +1,10 @@
 # typescript-graphql
 
+## Requirements
+
+You need to have `rootDir` compiler options set in TypeScript so that the script can generate
+data in proper places.
+
 ## Installation
 
 1. `npm install typescript-graphql`

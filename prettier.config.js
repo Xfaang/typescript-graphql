@@ -7,7 +7,14 @@ module.exports = {
       },
     },
     {
-      files: ['*.js', '*.ts', '*.jsx', '*.tsx'],
+      files: ['*.json'],
+      options: {
+        parser: 'javascript',
+        endOfLine: 'lf',
+      },
+    },
+    {
+      files: ['*.js', '*.ts', '*.jsx', '*.tsx', '*.json'],
       options: {
         parser: 'typescript',
         singleQuote: true,

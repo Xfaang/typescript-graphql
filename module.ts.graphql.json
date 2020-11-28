@@ -1,0 +1,60 @@
+[
+    {
+        "name": "plus",
+        "documentation": "",
+        "type": "(a: number, b: number) => number",
+        "calls": [
+            {
+                "parameters": [
+                    {
+                        "name": "a",
+                        "documentation": "",
+                        "type": "number",
+                        "param": {
+                            "typeName": "number"
+                        }
+                    },
+                    {
+                        "name": "b",
+                        "documentation": "",
+                        "type": "number",
+                        "param": {
+                            "typeName": "float"
+                        }
+                    }
+                ],
+                "returnType": "number",
+                "documentation": ""
+            }
+        ]
+    },
+    {
+        "name": "concat",
+        "documentation": "",
+        "type": "(firstName: string, lastName: string) => Person",
+        "calls": [
+            {
+                "parameters": [
+                    {
+                        "name": "firstName",
+                        "documentation": "",
+                        "type": "string",
+                        "param": {
+                            "typeName": "string"
+                        }
+                    },
+                    {
+                        "name": "lastName",
+                        "documentation": "",
+                        "type": "string",
+                        "param": {
+                            "typeName": "string"
+                        }
+                    }
+                ],
+                "returnType": "Person",
+                "documentation": ""
+            }
+        ]
+    }
+]

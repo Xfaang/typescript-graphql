@@ -1,10 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { printSchema } from 'graphql';
 import yargs from 'yargs';
-import { generateGraphQLSchema } from './generateGraphQLSchema';
 import { processFile } from './processFile';
 const { hideBin } = require('yargs/helpers');
+
+export { getSchemaForCode } from './getSchemaForCode';
+export { gql } from './gql';
 
 yargs(hideBin(process.argv)).command<{ url: string }>(
   'curl <url>',

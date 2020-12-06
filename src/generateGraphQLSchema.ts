@@ -21,7 +21,7 @@ export function generateGraphQLSchema(
 
   const schema = new graphql.GraphQLSchema({
     query: new graphql.GraphQLObjectType({
-      name: 'RootQueryType',
+      name: 'Query',
       fields: fieldsConfig,
     }),
   });

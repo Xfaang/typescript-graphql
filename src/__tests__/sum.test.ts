@@ -14,7 +14,7 @@ describe('Application', () => {
 
     expect(schema).toEqualSchema(gql`
       type Query {
-        sum: String
+        sum(a: Int, b: Int): Int
       }
     `);
   });

@@ -7,19 +7,21 @@ const { hideBin } = require('yargs/helpers');
 export { getSchemaForCode } from './getSchemaForCode';
 export { gql } from './gql';
 
-yargs(hideBin(process.argv)).command<{ url: string }>(
-  'curl <url>',
-  'fetch the contents of the URL',
+yargs(hideBin(process.argv)).command<{ path: string }>(
+  'module <path>',
+  'prepares the module for graphql',
   () => {},
   (argv) => {
     console.info(argv);
 
-    const declarations = processFile(argv.url);
+    const declarations = processFile(argv.path);
     console.log(1, JSON.stringify(declarations, undefined, 4));
 
     const currentDirectory = process.cwd();
-    const fullPath = path.join(currentDirectory, path.basename(argv.url));
+    const fullPath = path.join(currentDirectory, path.basename(argv.path));
     const ext = path.extname(fullPath);
+
+    // TODO use dist path from tsconfig file
     const savedFilePath = path.format({
       ...path.parse(fullPath),
       base: undefined,

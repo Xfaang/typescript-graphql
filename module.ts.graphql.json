@@ -1,6 +1,6 @@
 [
     {
-        "name": "plus",
+        "name": "plus22",
         "documentation": "",
         "type": "(a: number, b: number) => number",
         "calls": [
@@ -24,12 +24,13 @@
                     }
                 ],
                 "returnType": "number",
+                "checkerReturnType": "number",
                 "documentation": ""
             }
         ]
     },
     {
-        "name": "concat",
+        "name": "concat22",
         "documentation": "",
         "type": "(firstName: string, lastName: string) => Person",
         "calls": [
@@ -53,6 +54,7 @@
                     }
                 ],
                 "returnType": "Person",
+                "checkerReturnType": "Person",
                 "documentation": ""
             }
         ]

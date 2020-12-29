@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc -w",
-    "start": "node dist/index.js",
+    "start": "ts-node src/index.ts",
     "server": "node dist/server.js",
     "server-watch": "nodemon dist/server.js",
     "test": "jest"
@@ -39,6 +39,7 @@
     "graphql": "^15.4.0",
     "jest": "^26.6.3",
     "nodemon": "^2.0.6",
+    "ts-node": "^9.1.1",
     "typescript": "^4.1.2"
   },
   "dependencies": {

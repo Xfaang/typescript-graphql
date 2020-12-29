@@ -3,7 +3,7 @@
 
 import type { float } from './types';
 
-export function plus(a: number, b: float): number {
+export function plus22(a: number, b: float): number {
   return a + b;
 }
 
@@ -13,7 +13,7 @@ interface Person {
   fullName: string;
 }
 
-export function concat(firstName: string, lastName: string): Person {
+export function concat22(firstName: string, lastName: string): Person {
   return {
     firstName,
     lastName,

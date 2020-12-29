@@ -31,7 +31,7 @@ function getTypeForString(typename: string): graphql.GraphQLScalarType {
 export function generateGraphQLSchema(
   declarations: DocEntry[]
 ): graphql.GraphQLSchema {
-  // console.log('gen1', JSON.stringify(declarations, null, 2));
+  console.log('gen1', JSON.stringify(declarations, null, 2));
 
   const fieldsConfig: graphql.GraphQLFieldConfigMap<any, any> = {};
 

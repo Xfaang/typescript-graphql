@@ -13,10 +13,6 @@ export interface DocEntry {
   };
 }
 
-ts.getOutputFileNames;
-
-ts.sys.fileExists;
-
 export function processFile(fileName: string) {
   return generateDocumentation([fileName], {
     target: ts.ScriptTarget.ES5, // ts.ScriptTarget.ES2015,
@@ -116,7 +112,8 @@ function generateDocumentation(
   function serializeCallSignature(signature: ts.Signature) {
     return {
       parameters: signature.parameters.map(serializeParameterSymbol),
-      returnType: checker.typeToString(signature.getReturnType()),
+      returnType: signature.declaration!.type!.getText(),
+      checkerReturnType: checker.typeToString(signature.getReturnType()),
       documentation: ts.displayPartsToString(
         signature.getDocumentationComment(checker)
       ),

@@ -14,7 +14,6 @@ export interface DocEntry {
 }
 
 export function processFile(fileName: string) {
-  console.log(111, fileName);
   return generateDocumentation([fileName], {
     target: ts.ScriptTarget.ES5, // ts.ScriptTarget.ES2015,
     module: ts.ModuleKind.CommonJS,
@@ -43,10 +42,6 @@ function generateDocumentation(
     basePath
   );
 
-  // console.log('compilerOptions', compilerOptions);
-
-  console.log(1, fileNames);
-
   // Build a program using the set of root file names in fileNames
   let program = ts.createProgram(fileNames, options);
 
@@ -71,7 +66,7 @@ function generateDocumentation(
       return;
     }
 
-    console.log('visiting node', node.getSourceFile().fileName, node.kind);
+    // console.log('visiting node', node.getSourceFile().fileName, node.kind);
 
     // generate SDL file
     if (ts.isFunctionDeclaration(node) && node.name) {
@@ -134,11 +129,6 @@ function generateDocumentation(
       symbol,
       parameterDeclaration
     );
-
-    if (symbol.getName() === 'b') {
-      // console.log(1, symbol.valueDeclaration.type);
-      console.log('kind', symbol.valueDeclaration.kind);
-    }
 
     return {
       name: symbol.getName(),

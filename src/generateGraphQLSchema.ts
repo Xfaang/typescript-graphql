@@ -28,10 +28,16 @@ function getTypeForString(typename: string): graphql.GraphQLScalarType {
   }
 }
 
-export function generateGraphQLSchema(
-  declarations: DocEntry[]
-): graphql.GraphQLSchema {
-  console.log('gen1', JSON.stringify(declarations, null, 2));
+export function generateGraphQLSchema({
+  queryModulePath,
+  declarations,
+}: {
+  queryModulePath: string;
+  declarations: DocEntry[];
+}): graphql.GraphQLSchema {
+  console.log('declarations', JSON.stringify(declarations, null, 2));
+
+  const module = require(queryModulePath);
 
   const fieldsConfig: graphql.GraphQLFieldConfigMap<any, any> = {};
 
@@ -55,17 +61,21 @@ export function generateGraphQLSchema(
       });
     }
 
+    const name = declaration.name!;
     const fieldConfig: graphql.GraphQLFieldConfig<any, any> = {
       type: type!,
       args,
       resolve(source, args) {
-        console.log('source', source);
-        console.log('args', args);
-        return 'world';
+        const argsAr: any[] = [];
+        Object.entries(args).forEach(([argName, argValue]) => {
+          argsAr[argIndexMap[argName]] = argValue;
+        });
+
+        return (module[name] as Function).apply(undefined, argsAr);
       },
     };
 
-    fieldsConfig[declaration.name!] = fieldConfig;
+    fieldsConfig[name] = fieldConfig;
   });
 
   const schema = new graphql.GraphQLSchema({

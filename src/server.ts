@@ -11,7 +11,10 @@ const port = 4000;
 // - retrieve this information and use to generate GraphQL schema
 // - decide whether given imports are query or mutation
 
-const schema = generateGraphQLSchema(require('../module.ts.graphql.json'));
+const schema = generateGraphQLSchema({
+  queryModulePath: '../module.ts',
+  declarations: require('../module.ts.graphql.json'),
+});
 
 // const schema = buildSchema({
 //   queryModulePath: './query', // ts -> require(...)

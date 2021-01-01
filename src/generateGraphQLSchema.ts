@@ -66,7 +66,7 @@ export function generateGraphQLSchema({
     const fieldConfig: graphql.GraphQLFieldConfig<any, any> = {
       type: type!,
       args,
-      description: declaration.documentation,
+      description: declaration.documentation || undefined,
       resolve(source, args) {
         const argsAr: any[] = [];
         Object.entries(args).forEach(([argName, argValue]) => {

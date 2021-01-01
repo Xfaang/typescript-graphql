@@ -6,6 +6,7 @@ const { hideBin } = require('yargs/helpers');
 
 export { getSchemaForCode } from './getSchemaForCode';
 export { gql } from './gql';
+export * from './types';
 
 yargs(hideBin(process.argv)).command<{ filePath: string }>(
   'module <filePath>',
@@ -30,6 +31,10 @@ yargs(hideBin(process.argv)).command<{ filePath: string }>(
         `Specified file ${fullPath} is not under the rootDir ${rootDir}`
       );
     }
+
+    // TODO
+    // each file that contains definitions used by the modules should
+    // include its own .graphql.json file for easier merges
 
     const outFilePath = path.join(outDir, relativePath);
     const jsonFilePath = path.format({

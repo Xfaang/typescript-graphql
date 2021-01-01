@@ -1,7 +1,7 @@
+import * as fs from 'fs';
 import * as graphql from 'graphql';
 import * as path from 'path';
 import { DocEntry, processFile } from './processFile';
-import * as fs from 'fs';
 
 function getTypeForString(typename: string): graphql.GraphQLScalarType {
   switch (typename) {
@@ -31,61 +31,64 @@ function getTypeForString(typename: string): graphql.GraphQLScalarType {
 }
 
 export function generateGraphQLSchema({
-  queryModulePath,
+  queryModulePaths,
 }: {
-  queryModulePath: string;
+  queryModulePaths: string[];
 }): graphql.GraphQLSchema {
-  const declarations = getDeclarationsForModule(queryModulePath);
-  console.log('declarations', JSON.stringify(declarations, null, 2));
+  const queryFieldsConfig: graphql.GraphQLFieldConfigMap<any, any> = {};
 
-  const module = require(queryModulePath);
+  queryModulePaths.forEach((queryModulePath) => {
+    const declarations = getDeclarationsForModule(queryModulePath);
+    console.log('declarations', JSON.stringify(declarations, null, 2));
 
-  const fieldsConfig: graphql.GraphQLFieldConfigMap<any, any> = {};
+    const module = require(queryModulePath);
 
-  declarations.forEach((declaration) => {
-    const args: graphql.GraphQLFieldConfigArgumentMap = {};
-    const argIndexMap: Record<string, number> = {};
+    declarations.forEach((declaration) => {
+      const args: graphql.GraphQLFieldConfigArgumentMap = {};
+      const argIndexMap: Record<string, number> = {};
 
-    let type: graphql.GraphQLScalarType;
+      let type: graphql.GraphQLScalarType;
 
-    if (declaration.calls) {
-      const call = declaration.calls[0];
+      if (declaration.calls) {
+        const call = declaration.calls[0];
 
-      type = getTypeForString(call.returnType!);
+        type = getTypeForString(call.returnType!);
 
-      call.parameters?.forEach((parameter, index) => {
-        const name = parameter.name!;
-        args[name] = {
-          type: getTypeForString(parameter.param!.typeName),
-        };
-        argIndexMap[name] = index;
-      });
-    }
-
-    const name = declaration.name!;
-    const fieldConfig: graphql.GraphQLFieldConfig<any, any> = {
-      type: type!,
-      args,
-      description: declaration.documentation || undefined,
-      resolve(source, args) {
-        const argsAr: any[] = [];
-        Object.entries(args).forEach(([argName, argValue]) => {
-          argsAr[argIndexMap[argName]] = argValue;
+        call.parameters?.forEach((parameter, index) => {
+          const name = parameter.name!;
+          args[name] = {
+            type: getTypeForString(parameter.param!.typeName),
+          };
+          argIndexMap[name] = index;
         });
+      }
 
-        return (module[name] as Function).apply(undefined, argsAr);
-      },
-    };
+      const name = declaration.name!;
+      const fieldConfig: graphql.GraphQLFieldConfig<any, any> = {
+        type: type!,
+        args,
+        description: declaration.documentation || undefined,
+        resolve(source, args) {
+          const argsAr: any[] = [];
+          Object.entries(args).forEach(([argName, argValue]) => {
+            argsAr[argIndexMap[argName]] = argValue;
+          });
 
-    fieldsConfig[name] = fieldConfig;
+          return (module[name] as Function).apply(undefined, argsAr);
+        },
+      };
+
+      queryFieldsConfig[name] = fieldConfig;
+    });
   });
 
   const schema = new graphql.GraphQLSchema({
     query: new graphql.GraphQLObjectType({
       name: 'Query',
-      fields: fieldsConfig,
+      fields: queryFieldsConfig,
     }),
   });
+
   return schema;
 }
 

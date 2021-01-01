@@ -10,5 +10,5 @@ module.exports = {
   transform: {
     '.tsx?': '<rootDir>/jest.transformer.typescript.js',
   },
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setupAfterEnv.ts'],
+  setupFilesAfterEnv: ['<rootDir>/src/__tests__/config/setupAfterEnv.ts'],
 };

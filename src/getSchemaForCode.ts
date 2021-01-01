@@ -1,7 +1,6 @@
 import * as graphql from 'graphql';
-import { generateGraphQLSchema } from './generateGraphQLSchema';
-import { processFile } from './processFile';
 import { isAbsolute } from 'path';
+import { generateGraphQLSchema } from './generateGraphQLSchema';
 
 interface Options {
   queryModulePaths: string[];
@@ -19,9 +18,8 @@ export function getSchemaForCode({
     }
   });
 
-  const [queryModulePath] = queryModulePaths;
   const schema = generateGraphQLSchema({
-    queryModulePath,
+    queryModulePaths,
   });
   return schema;
 }

@@ -7,8 +7,8 @@
     "build": "tsc",
     "build:watch": "tsc -w",
     "start": "ts-node src/index.ts",
-    "server": "node dist/server.js",
-    "server-watch": "nodemon dist/server.js",
+    "server": "ts-node src/server.ts",
+    "server:watch": "nodemon dist/server.js",
     "test": "jest"
   },
   "repository": {

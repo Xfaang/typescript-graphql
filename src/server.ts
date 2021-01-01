@@ -1,6 +1,6 @@
+import * as path from 'path';
 import express from 'express';
 import { graphqlHTTP } from 'express-graphql';
-import { GraphQLObjectType, GraphQLSchema, GraphQLString } from 'graphql';
 import { generateGraphQLSchema } from './generateGraphQLSchema';
 
 const port = 4000;
@@ -12,8 +12,7 @@ const port = 4000;
 // - decide whether given imports are query or mutation
 
 const schema = generateGraphQLSchema({
-  queryModulePath: '../module.ts',
-  declarations: require('../module.ts.graphql.json'),
+  queryModulePath: path.resolve(__dirname, './module'),
 });
 
 // const schema = buildSchema({

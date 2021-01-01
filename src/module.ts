@@ -3,20 +3,26 @@
 
 import type { float } from './types';
 
-export function plus22(a: number, b: float): number {
+/** adds two numbers */
+export function plus(a: float, b: float): float {
   return a + b;
 }
 
-interface Person {
-  firstName: string;
-  lastName: string;
-  fullName: string;
+/** subtracts two numbers */
+export function minus(a: float, b: float): float {
+  return a - b;
 }
 
-export function concat22(firstName: string, lastName: string): Person {
-  return {
-    firstName,
-    lastName,
-    fullName: `${firstName} ${lastName}`,
-  };
-}
+// interface Person {
+//   firstName: string;
+//   lastName: string;
+//   fullName: string;
+// }
+
+// export function concat22(firstName: string, lastName: string): Person {
+//   return {
+//     firstName,
+//     lastName,
+//     fullName: `${firstName} ${lastName}`,
+//   };
+// }

@@ -25,23 +25,6 @@ function generateDocumentation(
   fileNames: string[],
   options: ts.CompilerOptions
 ): DocEntry[] {
-  const basePath = process.cwd();
-  const configFileName = ts.findConfigFile(
-    basePath,
-    ts.sys.fileExists,
-    'tsconfig.json'
-  );
-  if (!configFileName) {
-    throw new Error("Could not find a valid 'tsconfig.json'.");
-  }
-
-  const configFile = ts.readConfigFile(configFileName, ts.sys.readFile);
-  const compilerOptions = ts.parseJsonConfigFileContent(
-    configFile.config,
-    ts.sys,
-    basePath
-  );
-
   // Build a program using the set of root file names in fileNames
   let program = ts.createProgram(fileNames, options);
 
@@ -155,4 +138,25 @@ function generateDocumentation(
       (!!node.parent && node.parent.kind === ts.SyntaxKind.SourceFile)
     );
   }
+}
+
+export function getCompilerOptions() {
+  const basePath = process.cwd();
+  const configFileName = ts.findConfigFile(
+    basePath,
+    ts.sys.fileExists,
+    'tsconfig.json'
+  );
+  if (!configFileName) {
+    throw new Error("Could not find a valid 'tsconfig.json'.");
+  }
+
+  const configFile = ts.readConfigFile(configFileName, ts.sys.readFile);
+  const { options } = ts.parseJsonConfigFileContent(
+    configFile.config,
+    ts.sys,
+    basePath
+  );
+
+  return options;
 }

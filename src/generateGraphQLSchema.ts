@@ -1,5 +1,7 @@
 import * as graphql from 'graphql';
-import { DocEntry } from './processFile';
+import * as path from 'path';
+import { DocEntry, processFile } from './processFile';
+import * as fs from 'fs';
 
 function getTypeForString(typename: string): graphql.GraphQLScalarType {
   switch (typename) {
@@ -30,11 +32,10 @@ function getTypeForString(typename: string): graphql.GraphQLScalarType {
 
 export function generateGraphQLSchema({
   queryModulePath,
-  declarations,
 }: {
   queryModulePath: string;
-  declarations: DocEntry[];
 }): graphql.GraphQLSchema {
+  const declarations = getDeclarationsForModule(queryModulePath);
   console.log('declarations', JSON.stringify(declarations, null, 2));
 
   const module = require(queryModulePath);
@@ -65,6 +66,7 @@ export function generateGraphQLSchema({
     const fieldConfig: graphql.GraphQLFieldConfig<any, any> = {
       type: type!,
       args,
+      description: declaration.documentation,
       resolve(source, args) {
         const argsAr: any[] = [];
         Object.entries(args).forEach(([argName, argValue]) => {
@@ -85,4 +87,48 @@ export function generateGraphQLSchema({
     }),
   });
   return schema;
+}
+
+function getModuleFullPath(id: string): string {
+  try {
+    console.log(1, require.resolve.paths(id));
+    return require.resolve(id);
+  } catch (e) {
+    if (e.code === 'MODULE_NOT_FOUND') {
+      throw new Error(`Could not resolve module ${id}`);
+    }
+    throw e;
+  }
+}
+
+function getDeclarationsForModule(absoultePath: string): DocEntry[] {
+  if (!path.isAbsolute(absoultePath)) {
+    throw new Error(`Expecting an absolute path but received ${absoultePath}`);
+  }
+
+  // 1. Check if a .ts file exists for the module
+  const tsModulePath = path.format({
+    ...path.parse(absoultePath),
+    base: undefined,
+    ext: '.ts',
+  });
+  if (fs.existsSync(tsModulePath)) {
+    console.log('reading from', tsModulePath);
+    return processFile(tsModulePath);
+  }
+
+  // 1. Check if a .graphql.json file exists for the module
+  const graphqlModulePath = path.format({
+    ...path.parse(absoultePath),
+    base: undefined,
+    ext: '.graphql.json',
+  });
+  if (fs.existsSync(graphqlModulePath)) {
+    console.log('reading from', graphqlModulePath);
+    return require(graphqlModulePath);
+  }
+
+  throw new Error(
+    `Neither a TypeScript source file nor GraphQL JSON was found for ${absoultePath}`
+  );
 }

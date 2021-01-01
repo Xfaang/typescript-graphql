@@ -20,10 +20,8 @@ export function getSchemaForCode({
   });
 
   const [queryModulePath] = queryModulePaths;
-  const declarations = processFile(queryModulePath);
   const schema = generateGraphQLSchema({
     queryModulePath,
-    declarations,
   });
   return schema;
 }

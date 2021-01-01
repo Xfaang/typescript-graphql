@@ -1,37 +1,58 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import yargs from 'yargs';
-import { processFile } from './processFile';
+import { getCompilerOptions, processFile } from './processFile';
 const { hideBin } = require('yargs/helpers');
 
 export { getSchemaForCode } from './getSchemaForCode';
 export { gql } from './gql';
 
-yargs(hideBin(process.argv)).command<{ path: string }>(
-  'module <path>',
+yargs(hideBin(process.argv)).command<{ filePath: string }>(
+  'module <filePath>',
   'prepares the module for graphql',
   () => {},
-  (argv) => {
-    console.info(argv);
+  ({ filePath }) => {
+    const fullPath = path.isAbsolute(filePath)
+      ? filePath
+      : path.join(process.cwd(), filePath);
 
-    const declarations = processFile(argv.path);
-    console.log(1, JSON.stringify(declarations, undefined, 4));
+    const { rootDir, outDir } = getCompilerOptions();
+    if (!rootDir) {
+      throw new Error('Your tsconfig file must specify rootDir');
+    }
+    if (!outDir) {
+      throw new Error('Your tsconfig file must specify outDir');
+    }
 
-    const currentDirectory = process.cwd();
-    const fullPath = path.join(currentDirectory, path.basename(argv.path));
-    const ext = path.extname(fullPath);
+    const relativePath = path.relative(rootDir, fullPath);
+    if (relativePath.startsWith('..')) {
+      throw new Error(
+        `Specified file ${fullPath} is not under the rootDir ${rootDir}`
+      );
+    }
 
-    // TODO use dist path from tsconfig file
-    const savedFilePath = path.format({
-      ...path.parse(fullPath),
+    const outFilePath = path.join(outDir, relativePath);
+    const jsonFilePath = path.format({
+      ...path.parse(outFilePath),
       base: undefined,
-      ext: `${ext}.graphql.json`,
+      ext: '.graphql.json',
     });
 
-    console.log(`Written data to file ${savedFilePath}`);
-    fs.writeFileSync(savedFilePath, JSON.stringify(declarations, undefined, 4));
+    updateJsonFile();
 
-    // const schema = generateGraphQLSchema(declarations);
-    // console.log(printSchema(schema));
+    // enter watch mode
+    fs.watch(fullPath, () => {
+      console.log(`Change to ${fullPath} detected.`);
+      updateJsonFile();
+    });
+
+    function updateJsonFile() {
+      const declarations = processFile(fullPath);
+      fs.writeFileSync(
+        jsonFilePath,
+        JSON.stringify(declarations, undefined, 4)
+      );
+      console.log(`Data written to file ${jsonFilePath}`);
+    }
   }
 ).argv;

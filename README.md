@@ -30,7 +30,7 @@ export function hello(): string {
 JavaScript code doesn't provide any information about types at runtime. That's why we need to
 generate these from the source code using `typescript-graphql` CLI tool. Use
 
-`npx typescript-graphql compile query.ts`
+`npx tsgc query.ts`
 
 <!-- tsgc [options] [file ...] -->
 

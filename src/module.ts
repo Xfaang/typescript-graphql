@@ -1,7 +1,7 @@
 // 1. How to retrieve this information from file?
 // 2. How to merge it with existing schema
 
-import type { float } from './types';
+import type { float, int } from './types';
 
 /** adds two numbers */
 export function plus(a: float, b: float): float {
@@ -9,7 +9,7 @@ export function plus(a: float, b: float): float {
 }
 
 /** subtracts two numbers */
-export function minus(a: float, b: float): float {
+export function minus(a: int, b: int): int {
   return a - b;
 }
 

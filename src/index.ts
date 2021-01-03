@@ -9,8 +9,8 @@ export { gql } from './gql';
 export * from './types';
 
 yargs(hideBin(process.argv)).command<{ filePath: string }>(
-  'module <filePath>',
-  'prepares the module for graphql',
+  'compile <filePath>',
+  'compiles provided modules for graphql',
   () => {},
   ({ filePath }) => {
     const fullPath = path.isAbsolute(filePath)

@@ -1,8 +1,8 @@
 {
   "name": "typescript-graphql",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Easiest way to convert TypeScript to GraphQL",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc -w",
@@ -10,6 +10,9 @@
     "server": "ts-node src/server.ts",
     "server:watch": "nodemon dist/server.js",
     "test": "jest"
+  },
+  "bin": {
+    "tsgc": "./dist/tsgc.js"
   },
   "repository": {
     "type": "git",

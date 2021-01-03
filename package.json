@@ -7,7 +7,7 @@
     "prebuild": "rimraf ./dist",
     "build": "tsc",
     "build:watch": "tsc -w",
-    "prepare": "tsc",
+    "prepare": "npm run build",
     "start": "ts-node src/tsgc.ts",
     "test": "jest",
     "server": "ts-node src/demo/server.ts",

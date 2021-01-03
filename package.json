@@ -1,6 +1,6 @@
 {
   "name": "tsgc",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Easiest way to convert TypeScript to GraphQL",
   "main": "./dist/index.js",
   "scripts": {

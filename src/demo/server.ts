@@ -1,7 +1,7 @@
 import express from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import * as path from 'path';
-import { generateGraphQLSchema } from './generateGraphQLSchema';
+import { getSchemaForCode } from '..';
 
 const port = 4000;
 
@@ -11,7 +11,7 @@ const port = 4000;
 // - retrieve this information and use to generate GraphQL schema
 // - decide whether given imports are query or mutation
 
-const schema = generateGraphQLSchema({
+const schema = getSchemaForCode({
   queryModulePaths: [path.resolve(__dirname, './module')],
 });
 

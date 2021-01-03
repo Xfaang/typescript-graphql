@@ -1,6 +1,6 @@
 1. Start conversion module (watches file changes)
 
-`npm start compile src/module.ts`
+`npm start -- -w src/demo/module.ts`
 
 2. Run project build in watch mode
 

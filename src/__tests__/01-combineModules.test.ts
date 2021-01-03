@@ -1,6 +1,7 @@
 import { graphql } from 'graphql';
 import { resolve } from 'path';
-import { getSchemaForCode, gql } from '..';
+import { getSchemaForCode } from '..';
+import { gql } from './utils';
 
 test('Converts combined query modules', async () => {
   const schema = getSchemaForCode({

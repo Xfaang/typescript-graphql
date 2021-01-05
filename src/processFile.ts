@@ -8,6 +8,11 @@ export interface DocEntry {
   calls?: DocEntry[];
   parameters?: DocEntry[];
   returnType?: string;
+  retTypeObjProps?: {
+    // properties of an object in returnType
+    name: string;
+    type: string;
+  }[];
   param?: {
     typeName: string;
   };
@@ -91,10 +96,26 @@ function generateDocumentation(
   }
 
   function serializeCallSignature(signature: ts.Signature) {
+    let retTypeObjProps = undefined;
+
+    const returnType = signature.getReturnType();
+    if (returnType.getFlags() === ts.TypeFlags.Object) {
+      const objectReturnType = returnType as ts.ObjectType;
+      console.log('return type object flags', objectReturnType.objectFlags);
+      retTypeObjProps = returnType.getProperties().map((symbol) => ({
+        name: symbol.getName(),
+        type: checker.typeToString(
+          checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration!)
+        ),
+      }));
+    }
+
+    // checker.typeToTypeNode(signature.getReturnType(), undefined, undefined);
     return {
       parameters: signature.parameters.map(serializeParameterSymbol),
       returnType: signature.declaration!.type!.getText(),
-      checkerReturnType: checker.typeToString(signature.getReturnType()),
+      checkerReturnType: checker.typeToString(returnType),
+      retTypeObjProps,
       documentation: ts.displayPartsToString(
         signature.getDocumentationComment(checker)
       ),

@@ -47,12 +47,25 @@ export function generateGraphQLSchema({
       const args: graphql.GraphQLFieldConfigArgumentMap = {};
       const argIndexMap: Record<string, number> = {};
 
-      let type: graphql.GraphQLScalarType;
+      let type: graphql.GraphQLScalarType | graphql.GraphQLObjectType;
 
       if (declaration.calls) {
         const call = declaration.calls[0];
 
-        type = getTypeForString(call.returnType!);
+        if (call.retTypeObjProps) {
+          const fields: graphql.GraphQLFieldConfigMap<any, any> = {};
+          call.retTypeObjProps.forEach(({ name, type }) => {
+            fields[name] = {
+              type: getTypeForString(type),
+            };
+          });
+          type = new graphql.GraphQLObjectType({
+            name: call.returnType!,
+            fields,
+          });
+        } else {
+          type = getTypeForString(call.returnType!);
+        }
 
         call.parameters?.forEach((parameter, index) => {
           const name = parameter.name!;

@@ -5,12 +5,14 @@ import { generateGraphQLSchema } from './generateGraphQLSchema';
 interface Options {
   queryModulePaths: string[];
   mutationModulePaths?: string[];
+  fieldResolverPaths?: Record<string, string[]>;
 }
 
 /** Converts code into GraphQLSchema */
 export function getSchemaForCode({
   queryModulePaths,
   mutationModulePaths = [],
+  fieldResolverPaths,
 }: Options): graphql.GraphQLSchema {
   queryModulePaths.forEach((path) => {
     if (!isAbsolute(path)) {
@@ -20,6 +22,7 @@ export function getSchemaForCode({
 
   const schema = generateGraphQLSchema({
     queryModulePaths,
+    fieldResolverPaths,
   });
   return schema;
 }

@@ -6,6 +6,9 @@ import { gql } from './utils';
 test('Converts combined query modules', async () => {
   const schema = getSchemaForCode({
     queryModulePaths: [resolve(__dirname, './modules/getPerson')],
+    fieldResolverPaths: {
+      Person: [resolve(__dirname, './modules/person/fullName')],
+    },
   });
 
   expect(schema).toEqualSchema(gql`
@@ -16,6 +19,7 @@ test('Converts combined query modules', async () => {
     type Person {
       firstName: String
       lastName: String
+      fullName: String
     }
   `);
 
@@ -27,11 +31,18 @@ test('Converts combined query modules', async () => {
           getPerson {
             firstName
             lastName
+            fullName
           }
         }
       `,
     })
   ).toEqual({
-    data: { getPerson: { firstName: 'John', lastName: 'Smith' } },
+    data: {
+      getPerson: {
+        firstName: 'John',
+        lastName: 'Smith',
+        fullName: 'John Smith',
+      },
+    },
   });
 });

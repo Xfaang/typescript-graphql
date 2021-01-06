@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-
+import { join, dirname, basename } from 'path';
 export interface DocEntry {
   name?: string;
   fileName?: string;
@@ -50,34 +50,24 @@ function generateDocumentation(
       continue;
     }
 
-    // Walk the tree to search for classes
-    ts.forEachChild(sourceFile, visit);
+    // console.log('visiting file', sourceFile.fileName);
+
+    const exportedSymbols = checker.getExportsOfModule(
+      checker.getSymbolAtLocation(sourceFile)!
+    );
+
+    exportedSymbols.forEach((exportedSymbol) => {
+      const { valueDeclaration } = exportedSymbol;
+      if (!valueDeclaration || !ts.isFunctionDeclaration(valueDeclaration)) {
+        // not a function - skip
+        return;
+      }
+
+      output.push(serializeFunction(exportedSymbol));
+    });
   }
 
   return output;
-
-  /** visit nodes finding exported classes */
-  function visit(node: ts.Node) {
-    // Only consider exported nodes
-    if (!isNodeExported(node)) {
-      return;
-    }
-
-    // console.log('visiting node', node.getSourceFile().fileName, node.kind);
-
-    // generate SDL file
-    if (ts.isFunctionDeclaration(node) && node.name) {
-      // This is a top level function, get its symbol
-      const symbol = checker.getSymbolAtLocation(node.name);
-      if (!symbol) {
-        return;
-      }
-      output.push(serializeFunction(symbol));
-    } else if (ts.isModuleDeclaration(node)) {
-      // This is a namespace, visit its children
-      ts.forEachChild(node, visit);
-    }
-  }
 
   function symbolDocumentationToString(symbol: ts.Symbol): string {
     return ts.displayPartsToString(symbol.getDocumentationComment(checker));
@@ -158,19 +148,6 @@ function generateDocumentation(
     return {
       typeName: node.type!.getText(),
     };
-  }
-
-  /** True if this is visible outside this file, false otherwise */
-  function isNodeExported(node: ts.Node): boolean {
-    const isExported =
-      (ts.getCombinedModifierFlags(node as ts.Declaration) &
-        ts.ModifierFlags.Export) !==
-      0;
-
-    const isTopLevel =
-      node.parent && node.parent.kind === ts.SyntaxKind.SourceFile;
-
-    return isExported && isTopLevel;
   }
 }
 

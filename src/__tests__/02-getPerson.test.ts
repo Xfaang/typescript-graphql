@@ -7,7 +7,7 @@ test('Converts combined query modules', async () => {
   const schema = getSchemaForCode({
     queryModulePaths: [resolve(__dirname, './modules/getPerson')],
     fieldResolverPaths: {
-      Person: [resolve(__dirname, './modules/person/fullName')],
+      Person: [resolve(__dirname, './modules/person')],
     },
   });
 

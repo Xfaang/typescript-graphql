@@ -172,7 +172,14 @@ function getDeclarationsForModule(absolutePath: string): DocEntry[] {
     return processFile(tsModulePath);
   }
 
-  // 1. Check if a .graphql.json file exists for the module
+  // 2. Check if a index file exists for the module
+  const tsModuleIndexPath = path.join(absolutePath, './index.ts');
+  if (fs.existsSync(tsModuleIndexPath)) {
+    console.log('reading from', tsModuleIndexPath);
+    return processFile(tsModuleIndexPath);
+  }
+
+  // 3. Check if a .graphql.json file exists for the module
   const graphqlModulePath = path.format({
     ...path.parse(absolutePath),
     base: undefined,

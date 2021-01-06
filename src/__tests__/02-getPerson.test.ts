@@ -1,4 +1,4 @@
-import { graphql, printSchema } from 'graphql';
+import { graphql } from 'graphql';
 import { resolve } from 'path';
 import { getSchemaForCode } from '..';
 import { gql } from './utils';

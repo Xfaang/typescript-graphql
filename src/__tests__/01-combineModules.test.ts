@@ -6,14 +6,14 @@ import { gql } from './utils';
 test('Converts combined query modules', async () => {
   const schema = getSchemaForCode({
     queryModulePaths: [
-      resolve(__dirname, './modules/getFullName'),
+      resolve(__dirname, './modules/concat'),
       resolve(__dirname, './modules/helloWorld'),
     ],
   });
 
   expect(schema).toEqualSchema(gql`
     type Query {
-      getFullName(firstName: String, lastName: String): String
+      concat(first: String, last: String): String
       helloWorld: String
     }
   `);
@@ -23,12 +23,12 @@ test('Converts combined query modules', async () => {
       schema,
       source: gql`
         query {
-          getFullName(firstName: "John", lastName: "Smith")
+          concat(first: "John", last: "Smith")
           helloWorld
         }
       `,
     })
   ).toEqual({
-    data: { getFullName: 'John Smith', helloWorld: 'Hello world!' },
+    data: { concat: 'John Smith', helloWorld: 'Hello world!' },
   });
 });

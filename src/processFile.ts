@@ -109,9 +109,10 @@ function generateDocumentation(
 
     const returnType = signature.getReturnType();
     if (returnType.getFlags() === ts.TypeFlags.Object) {
+      // NOTE: isClassOrInterface returns true for interface but false for type
       const objectReturnType = returnType as ts.ObjectType;
       // console.log('return type object flags', objectReturnType.objectFlags);
-      retTypeObjProps = returnType.getProperties().map((symbol) => ({
+      retTypeObjProps = objectReturnType.getProperties().map((symbol) => ({
         name: symbol.getName(),
         type: checker.typeToString(
           checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration!)

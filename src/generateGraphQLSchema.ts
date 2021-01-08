@@ -78,7 +78,7 @@ function getFieldConfigMapForModule(
           fields,
         });
       } else {
-        type = getTypeForString(call.returnType!);
+        type = getTypeForString(call.returnType ?? call.checkerReturnType!);
       }
 
       call.parameters?.forEach((parameter, index) => {

@@ -8,6 +8,7 @@ export interface DocEntry {
   calls?: DocEntry[];
   parameters?: DocEntry[];
   returnType?: string;
+  checkerReturnType?: string;
   retTypeObjProps?: {
     // properties of an object in returnType
     name: string;
@@ -113,7 +114,7 @@ function generateDocumentation(
     // checker.typeToTypeNode(signature.getReturnType(), undefined, undefined);
     return {
       parameters: signature.parameters.map(serializeParameterSymbol),
-      returnType: signature.declaration!.type!.getText(),
+      returnType: signature.declaration!.type?.getText(),
       checkerReturnType: checker.typeToString(returnType),
       retTypeObjProps,
       documentation: ts.displayPartsToString(

@@ -8,6 +8,23 @@ Create a GraphQL api
 
 Effortless GraphQL for your TypeScript modules
 Instant GraphQL for your TypeScript modules
+
+IDEA
+
+The easiest way to create GraphQL API for TypeScript modules
+
+Create GraphQL API for TypeScript modules, the easiest way
+
+How
+
+- intro
+- define functions to be exported
+- showcase the basic ways
+- show our way
+- show other ways
+- consclusion
+
+include
 -->
 
 1. GraphQL is a popular API query language that requires defining schema.

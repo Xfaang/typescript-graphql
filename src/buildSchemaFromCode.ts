@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as graphql from 'graphql';
 import * as path from 'path';
+import { isAbsolute } from 'path';
 import { DocEntry, processFile } from './processFile';
-import { ResolverThis } from './types';
 
 function getTypeForString(typename: string): graphql.GraphQLScalarType {
   switch (typename) {
@@ -31,20 +31,19 @@ function getTypeForString(typename: string): graphql.GraphQLScalarType {
   }
 }
 
-function getFieldConfigMapForModule(
-  absolutePath: string,
-  { fieldResolverPaths }: { fieldResolverPaths?: Record<string, string[]> }
-): graphql.GraphQLFieldConfigMap<any, any> {
+function getFieldConfigMapForModule({
+  declarations,
+  module,
+  fieldName,
+}: {
+  declarations: Record<string, DocEntry[]>;
+  module: any;
+  fieldName: string;
+}): graphql.GraphQLFieldConfigMap<any, any> {
   const fieldConfigMap: graphql.GraphQLFieldConfigMap<any, any> = {};
 
-  const declarations = getDeclarationsForModule(absolutePath);
-  const module = require(absolutePath);
-
-  console.log('declarations', JSON.stringify(declarations, null, 2));
-
-  declarations.forEach((declaration) => {
+  declarations[fieldName].forEach((declaration) => {
     const args: graphql.GraphQLFieldConfigArgumentMap = {};
-    const argIndexMap: Record<string, number> = {};
 
     let type: graphql.GraphQLScalarType | graphql.GraphQLObjectType;
 
@@ -61,16 +60,15 @@ function getFieldConfigMapForModule(
         });
 
         // add virtual fields provided by field resolvers
-        const objectFieldResolverPaths = fieldResolverPaths?.[objectName];
-        if (objectFieldResolverPaths) {
-          objectFieldResolverPaths.forEach((objectFieldResolverPath) => {
-            Object.assign(
-              fields,
-              getFieldConfigMapForModule(objectFieldResolverPath, {
-                fieldResolverPaths,
-              })
-            );
-          });
+        if (declarations[objectName]) {
+          Object.assign(
+            fields,
+            getFieldConfigMapForModule({
+              declarations,
+              module,
+              fieldName: objectName,
+            })
+          );
         }
 
         type = new graphql.GraphQLObjectType({
@@ -81,13 +79,16 @@ function getFieldConfigMapForModule(
         type = getTypeForString(call.returnType ?? call.checkerReturnType!);
       }
 
-      call.parameters?.forEach((parameter, index) => {
-        const name = parameter.name!;
-        args[name] = {
-          type: getTypeForString(parameter.param!.typeName),
-        };
-        argIndexMap[name] = index;
-      });
+      // take only secod argument which is for args
+      if (call.parameters?.[1]) {
+        const argParam = call.parameters![1].param;
+        if (!argParam) {
+          throw new Error(`Expecting param in second argument of resolver`);
+        }
+        Object.entries(argParam.objectProps).forEach(([name, value]) => {
+          args[name] = { type: getTypeForString(value) };
+        });
+      }
     }
 
     const name = declaration.name!;
@@ -96,19 +97,13 @@ function getFieldConfigMapForModule(
       args,
       description: declaration.documentation || undefined,
       resolve(source, args, context, info) {
-        const argsAr: any[] = [];
-        Object.entries(args).forEach(([argName, argValue]) => {
-          argsAr[argIndexMap[argName]] = argValue;
-        });
-
-        const thisArg: ResolverThis<any, any> = {
-          parent: source,
+        return (module[fieldName][name] as Function).call(
+          undefined,
+          source,
           args,
           context,
-          info,
-        };
-
-        return (module[name] as Function).apply(thisArg, argsAr);
+          info
+        );
       },
     };
 
@@ -118,20 +113,35 @@ function getFieldConfigMapForModule(
   return fieldConfigMap;
 }
 
-export function generateGraphQLSchema({
-  queryModulePaths,
-  fieldResolverPaths,
+/** Converts code into GraphQLSchema */
+export function buildSchemaFromCode({
+  modulePath,
 }: {
-  queryModulePaths: string[];
-  fieldResolverPaths?: Record<string, string[]>;
+  modulePath: string;
 }): graphql.GraphQLSchema {
-  const queryFieldsConfig: graphql.GraphQLFieldConfigMap<any, any> = {};
+  if (!isAbsolute(modulePath)) {
+    throw new Error(`Expecting absolute path in ${modulePath}`);
+  }
 
-  queryModulePaths.forEach((queryModulePath) => {
-    const fieldConfigMap = getFieldConfigMapForModule(queryModulePath, {
-      fieldResolverPaths,
-    });
-    Object.assign(queryFieldsConfig, fieldConfigMap);
+  const declarations: Record<string, DocEntry[]> = getDeclarationsForModule(
+    modulePath
+  ) as any;
+  const module = require(modulePath);
+
+  console.log('declarations', JSON.stringify(declarations, null, 2));
+
+  const queryFieldsConfig: graphql.GraphQLFieldConfigMap<
+    any,
+    any
+  > = getFieldConfigMapForModule({ declarations, module, fieldName: 'Query' });
+
+  const mutationFieldsConfig: graphql.GraphQLFieldConfigMap<
+    any,
+    any
+  > = getFieldConfigMapForModule({
+    declarations,
+    module,
+    fieldName: 'Mutation',
   });
 
   const schema = new graphql.GraphQLSchema({
@@ -139,21 +149,13 @@ export function generateGraphQLSchema({
       name: 'Query',
       fields: queryFieldsConfig,
     }),
+    mutation: new graphql.GraphQLObjectType({
+      name: 'Mutation',
+      fields: mutationFieldsConfig,
+    }),
   });
 
   return schema;
-}
-
-function getModuleFullPath(id: string): string {
-  try {
-    console.log(1, require.resolve.paths(id));
-    return require.resolve(id);
-  } catch (e) {
-    if (e.code === 'MODULE_NOT_FOUND') {
-      throw new Error(`Could not resolve module ${id}`);
-    }
-    throw e;
-  }
 }
 
 function getDeclarationsForModule(absolutePath: string): DocEntry[] {
@@ -169,14 +171,14 @@ function getDeclarationsForModule(absolutePath: string): DocEntry[] {
   });
   if (fs.existsSync(tsModulePath)) {
     console.log('reading from', tsModulePath);
-    return processFile(tsModulePath);
+    return processFile(tsModulePath) as any;
   }
 
   // 2. Check if a index file exists for the module
   const tsModuleIndexPath = path.join(absolutePath, './index.ts');
   if (fs.existsSync(tsModuleIndexPath)) {
     console.log('reading from', tsModuleIndexPath);
-    return processFile(tsModuleIndexPath);
+    return processFile(tsModuleIndexPath) as any;
   }
 
   // 3. Check if a .graphql.json file exists for the module

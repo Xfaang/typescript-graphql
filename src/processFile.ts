@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { join, dirname, basename } from 'path';
+
 export interface DocEntry {
   name?: string;
   fileName?: string;
@@ -16,6 +16,7 @@ export interface DocEntry {
   }[];
   param?: {
     typeName: string;
+    objectProps: Record<string, string>;
   };
 }
 
@@ -31,16 +32,19 @@ export function processFile(fileName: string) {
 function generateDocumentation(
   fileNames: string[],
   options: ts.CompilerOptions
-): DocEntry[] {
+): Record<string, DocEntry[]> {
   // Build a program using the set of root file names in fileNames
   let program = ts.createProgram(fileNames, options);
 
   // Get the checker, we will use it to find more about classes
   let checker = program.getTypeChecker();
-  let output: DocEntry[] = [];
+  let output: Record<string, DocEntry[]> = {};
 
   // Visit every sourceFile in the program
   for (const sourceFile of program.getSourceFiles()) {
+    //
+    // TODO use program.getSourceFile
+    //
     if (!fileNames.includes(sourceFile.fileName)) {
       // skip non-root files
       continue;
@@ -59,12 +63,25 @@ function generateDocumentation(
 
     exportedSymbols.forEach((exportedSymbol) => {
       const { valueDeclaration } = exportedSymbol;
-      if (!valueDeclaration || !ts.isFunctionDeclaration(valueDeclaration)) {
-        // not a function - skip
-        return;
+
+      if (!valueDeclaration) {
+        throw new Error(`Expecting value declaration in the exported symbol`);
       }
 
-      output.push(serializeFunction(exportedSymbol));
+      const symbolType = checker.getTypeOfSymbolAtLocation(
+        exportedSymbol,
+        valueDeclaration
+      );
+
+      if (symbolType.getFlags() !== ts.TypeFlags.Object) {
+        // not an object type
+        return output;
+      }
+
+      const objectType = symbolType as ts.ObjectType;
+      output[exportedSymbol.name] = objectType
+        .getProperties()
+        .map((symbol) => serializeFunction(symbol));
     });
   }
 
@@ -146,8 +163,19 @@ function generateDocumentation(
   }
 
   function serializeParameterDeclaration(node: ts.ParameterDeclaration) {
+    const objectProps: Record<string, string> = {};
+    if (ts.isTypeLiteralNode(node.type!)) {
+      node.type!.members.forEach((member) => {
+        if (!ts.isPropertySignature(member) || !member.type) {
+          return;
+        }
+        objectProps[member.name.getText()] = member.type!.getText();
+      });
+    }
+
     return {
       typeName: node.type!.getText(),
+      objectProps,
     };
   }
 }

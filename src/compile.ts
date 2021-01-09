@@ -24,10 +24,6 @@ export async function compile(files: string[], options: { watch?: boolean }) {
     );
   }
 
-  // TODO
-  // each file that contains definitions used by the modules should
-  // include its own .graphql.json file for easier merges
-
   const outFilePath = path.join(outDir, relativePath);
   const jsonFilePath = path.format({
     ...path.parse(outFilePath),

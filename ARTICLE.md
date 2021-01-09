@@ -25,7 +25,13 @@ How
 - consclusion
 
 include
+
+simple blogging module
 -->
+
+```ts
+
+```
 
 1. GraphQL is a popular API query language that requires defining schema.
 2. TypeScript already has a type system that can be leveraged to get the required information

@@ -1,2 +1,2 @@
-export { getSchemaForCode } from './getSchemaForCode';
+export { buildSchemaFromCode } from './buildSchemaFromCode';
 export * from './types';

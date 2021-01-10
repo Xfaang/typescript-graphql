@@ -1,148 +1,241 @@
-# Effortless GraphQL for your TypeScript modules
+# Easiest way to create GraphQL API for a TypeScript module
 
-<!--
-NoExpose your TypeScript modules via GraphQL
-The easiest way to create a GraphQL API for your TypeScript modules
-Quickly create
-Create a GraphQL api
+GraphQL is a popular API query language that offers more structured, performant
+and secure ways of accessing data from another service than REST. It requires
+the server to define a schema that lists all types of data available for clients
+of the API.
 
-Effortless GraphQL for your TypeScript modules
-Instant GraphQL for your TypeScript modules
+When building a GraphQL server to allow access to a TypeScript module, one needs
+to make sure that the types in GraphQL Schema reflect accurately what data is
+expected. Let's take a look at the following example of a simple bookstore module.
 
-IDEA
-
-The easiest way to create GraphQL API for TypeScript modules
-
-Create GraphQL API for TypeScript modules, the easiest way
-
-How
-
-- intro
-- define functions to be exported
-- showcase the basic ways
-- show our way
-- show other ways
-- consclusion
-
-include
-
-simple blogging module
--->
+## Bookstore module
 
 ```ts
+// bookstore.ts (part 1/3)
 
+type int = number;
+
+type Book = {
+  id: int;
+  title: string;
+  authorId: int;
+};
+
+type Author = {
+  id: int;
+  name: string;
+};
 ```
 
-1. GraphQL is a popular API query language that requires defining schema.
-2. TypeScript already has a type system that can be leveraged to get the required information
-3. Project - todo, author posts, reddit links
+We use a custom type alias `int` here to indicate that given properties are
+integers rather than use the generic JavaScript `number`.
 
-## Basic example
+Here is a simple database for our bookstore:
 
-Let's take a look at an example from [a reference implementation of GraphQL for JavaScript](https://github.com/graphql/graphql-js).
+```ts
+// bookstore.ts (part 2/3)
 
-There is a simple function that we want to make available over an API:
+const booksDb: Book[] = [
+  {
+    id: 0,
+    title: 'Romeo and Juliet',
+    authorId: 0,
+  },
+  {
+    id: 1,
+    title: 'The Mysterious Affair at Styles',
+    authorId: 1,
+  },
+  {
+    id: 2,
+    title: 'Endless Night',
+    authorId: 1,
+  },
+];
 
-```js
-function hello() {
-  return 'world';
+const authorsDb: Author[] = [
+  {
+    id: 0,
+    name: 'William Shakespeare',
+  },
+  {
+    id: 1,
+    name: 'Agatha Christie',
+  },
+];
+```
+
+The functions below allow reading data from the bookstore:
+
+```ts
+// bookstore.ts (part 3/3)
+
+/** get all books */
+export function getBooks() {
+  return booksDb;
+}
+
+/** get all authors */
+export function getAuthors() {
+  return authorsDb;
+}
+
+/** get the author of the given book */
+export function author(book: Book) {
+  return authorsDb.find((author) => author.id === book.authorId);
 }
 ```
 
-In order to do it we need to create a GraphQL schema:
+In order to make these functions available in GraphQL, we need to define a
+GraphQL Schema. Let's compare a few ways of doing this.
 
-```js
+## The native way
+
+```ts
+// schema.ts (the native way)
+
 import {
   graphql,
-  GraphQLSchema,
+  GraphQLInt,
+  GraphQLList,
   GraphQLObjectType,
+  GraphQLSchema,
   GraphQLString,
 } from 'graphql';
 
-var schema = new GraphQLSchema({
+import { author, books, getAuthors, getBooks } from './bookstore';
+
+const bookType: GraphQLObjectType = new GraphQLObjectType({
+  name: 'Book',
+  fields: () => ({
+    id: {
+      type: GraphQLInt,
+    },
+    title: {
+      type: GraphQLString,
+    },
+    authorId: {
+      type: GraphQLInt,
+    },
+    author: {
+      type: authorType,
+      resolve: author,
+    },
+  }),
+});
+
+const authorType = new GraphQLObjectType({
+  name: 'Author',
+  fields: () => ({
+    id: {
+      type: GraphQLInt,
+    },
+    name: {
+      type: GraphQLString,
+    },
+  }),
+});
+
+export const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
     name: 'Query',
     fields: {
-      hello: {
-        type: GraphQLString,
-        resolve: hello,
+      getBooks: {
+        type: new GraphQLList(bookType),
+        resolve: getBooks,
+      },
+      getAuthors: {
+        type: new GraphQLList(authorType),
+        resolve: getAuthors,
       },
     },
   }),
 });
 ```
 
-This schema already provides a custom resolver which is useful in certain cases.
-
-This is a simple schema with a single `hello` field. You can use this schema as follows
-
-```js
-// outputs "world"
-console.log(await graphql({ schema, source: '{ hello }' }));
-```
-
-Setting up GraphQL server requires us to be specific about types of data exposed with it.
-
-It's worth noting that in case of simple schemas that are based on the default resolvers, there is a shorter way to provide the schema - we can build it from source:
-
-```js
-var schema = buildSchema(`
-  type Query {
-    hello: String
-  }
-`);
-```
-
-In such case, we also need to provide the root value which will include the fields listed in `Query` type:
-
-```js
-// outputs "world"
-console.log(
-  await graphql({
-    schema,
-    source: '{ hello }',
-    rootValue: { hello },
-  })
-);
-```
-
-In both cases, additional code needed to be added in order to expose the GraphQL API.
-
-### TypeScript
-
-Once we migrate our code from typeless JavaScript to a TypeScript module like so:
+With `schema` object defined above we can use GraphiQL that comes with
+`express-graphql` to preview our server:
 
 ```ts
-// hello.ts
+// server.ts
 
-export function hello(): string {
-  return 'world';
-}
+import express from 'express';
+import { graphqlHTTP } from 'express-graphql';
+
+import { schema } from './schema';
+
+const port = 4000;
+
+express()
+  .use(
+    '/graphql',
+    graphqlHTTP({
+      schema,
+      graphiql: true,
+    })
+  )
+  .listen(port);
 ```
 
-We already have a type information attached to our source code that GraphQL
-could use to build its schema. This is exactly what a new library from xFAANG
-has to offer
-[typescript-graphql](https://www.npmjs.com/package/typescript-graphql).
+Here's the result:
 
-In order to do it you just need to provide the paths for modules that you wish to expose in the schema.
+[Image - screenshot from GraphiQL]
+
+Unfortunately, to define GraphQL schema to reflect the bookstore module _we had
+to repeat all the type and resolver information_ in a way that GraphQL could
+undestand. This form of code repretition is undesirable because it is tedious
+and error prone. For example TypeScript won't be able to check if the GraphQL
+types you provided are correct.
+
+# The easy way
+
+At xFAANG we like finding solutions to problems like this to empower developers
+to spend more time writing meaningful code. If your module is already written in
+TypeScript it's possible to look into its definitions and derive from them what
+GraphQL types need to be used. We have created `typescript-graphql` package that
+allows just that!
+
+When using the package you first need to export `Query` object that includes any
+top level resolvers. You may also export additonal object that include field
+resolvers for your custom types. Any addtional functions exported from the
+module are ignorred.
 
 ```ts
-import { resolve } from 'path';
-import { getSchemaForModules } from 'typescript-graphql';
+// bookstore.ts (additional exports)
 
-const schema = getSchemaForModules({
-  queryPaths: [resolve(__dirname, './hello')],
+export const Query = {
+  getAuthors,
+  getBooks,
+};
+
+export const Book = {
+  author,
+};
+```
+
+Secondly, you need to provide the absolute path to the module you wish to expose in GraphQL:
+
+```ts
+// schema.ts (the easy way)
+
+import { buildSchemaFromCode } from 'typescript-graphql';
+
+export const schema = buildSchemaFromCode({
+  modulePath: path.resolve(__dirname, './bookstore'),
 });
 ```
 
-If your workflow includes running `tsc` to compile TypeScript into JavaScript,
-you'll also need to use `tsgc` command which comes with `typescript-graphql` to
-create a `.graphql.json` files for all modules that you wish to expose.
+Also, if your build phase include compilation of TypeScript into JavaScript with
+`tsc`, you also need to run `npx tsgc` on any modules that you wish to expose
+with GraphQL.
 
-`npx tsgc hello.ts`
+`npx tsgc bookstore.ts`
 
-It will create a `hello.graphql.json` file in your TypeScript `outDir` that will
-provide necessary information to `getSchemaForModules` at runtime.
+This will create `bookstore.graphql.json` file in your `outDir` that include
+type information necessary to generate schema at runtime. That's it! You just
+saved yourself writing and maintaining a lot of GraphQL code.
 
-## A more complex example - blogging system
+At the time of writing this article, `typescript-graphql` is published in a
+proof-of-concept alpha version as an open source project. We're looking forward
+to hearing feedback from you!

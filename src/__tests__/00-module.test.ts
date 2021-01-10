@@ -3,7 +3,7 @@ import { buildSchemaFromCode } from '..';
 import { int } from '../types';
 import { gql } from './utils';
 
-test('Converts modules using scalar types', async () => {
+test('Simple module', async () => {
   const schema = buildSchemaFromCode({
     modulePath: __filename,
   });
@@ -94,11 +94,3 @@ export const Mutation = {
 export const Person = {
   fullName,
 };
-
-// TODO cover case where export is separate and where functions are separate
-// export { Query };
-
-// TODO#1 can hide properties with a type/interface?
-// TODO#2 handle inline return object type
-// TODO#3 object as argument
-// - expand first input argument if an object (-> make this an optional behavior)

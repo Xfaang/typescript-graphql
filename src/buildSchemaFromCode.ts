@@ -35,48 +35,61 @@ function getFieldConfigMapForModule({
   declarations,
   module,
   fieldName,
+  knownTypes = {},
 }: {
   declarations: Record<string, DocEntry[]>;
   module: any;
   fieldName: string;
+  knownTypes?: Record<string, graphql.GraphQLObjectType>;
 }): graphql.GraphQLFieldConfigMap<any, any> {
   const fieldConfigMap: graphql.GraphQLFieldConfigMap<any, any> = {};
 
-  declarations[fieldName].forEach((declaration) => {
+  (declarations[fieldName] || []).forEach((declaration) => {
     const args: graphql.GraphQLFieldConfigArgumentMap = {};
 
     let type: graphql.GraphQLScalarType | graphql.GraphQLObjectType;
+    let isArrayType: boolean = false;
 
     if (declaration.calls) {
       const call = declaration.calls[0];
 
-      if (call.retTypeObjProps) {
-        const objectName = call.returnType!;
-        const fields: graphql.GraphQLFieldConfigMap<any, any> = {};
-        call.retTypeObjProps.forEach(({ name, type }) => {
-          fields[name] = {
-            type: getTypeForString(type),
-          };
-        });
+      if (call.retTypeIsArray) {
+        isArrayType = true;
+      }
 
-        // add virtual fields provided by field resolvers
-        if (declarations[objectName]) {
-          Object.assign(
+      if (!call.retTypeObjProps) {
+        type = getTypeForString(call.returnType ?? call.checkerReturnType!);
+      } else {
+        const objectName = call.returnType!;
+
+        if (!(objectName in knownTypes)) {
+          const fields: graphql.GraphQLFieldConfigMap<any, any> = {};
+          call.retTypeObjProps.forEach(({ name, type }) => {
+            fields[name] = {
+              type: getTypeForString(type),
+            };
+          });
+
+          // add virtual fields provided by field resolvers
+          if (declarations[objectName]) {
+            Object.assign(
+              fields,
+              getFieldConfigMapForModule({
+                declarations,
+                module,
+                fieldName: objectName,
+                knownTypes,
+              })
+            );
+          }
+
+          knownTypes[objectName] = new graphql.GraphQLObjectType({
+            name: objectName,
             fields,
-            getFieldConfigMapForModule({
-              declarations,
-              module,
-              fieldName: objectName,
-            })
-          );
+          });
         }
 
-        type = new graphql.GraphQLObjectType({
-          name: objectName,
-          fields,
-        });
-      } else {
-        type = getTypeForString(call.returnType ?? call.checkerReturnType!);
+        type = knownTypes[objectName];
       }
 
       // take only secod argument which is for args
@@ -93,7 +106,7 @@ function getFieldConfigMapForModule({
 
     const name = declaration.name!;
     const fieldConfig: graphql.GraphQLFieldConfig<any, any> = {
-      type: type!,
+      type: isArrayType ? new graphql.GraphQLList(type!) : type!,
       args,
       description: declaration.documentation || undefined,
       resolve(source, args, context, info) {
@@ -149,10 +162,13 @@ export function buildSchemaFromCode({
       name: 'Query',
       fields: queryFieldsConfig,
     }),
-    mutation: new graphql.GraphQLObjectType({
-      name: 'Mutation',
-      fields: mutationFieldsConfig,
-    }),
+    mutation:
+      (Object.keys(mutationFieldsConfig).length > 0 &&
+        new graphql.GraphQLObjectType({
+          name: 'Mutation',
+          fields: mutationFieldsConfig,
+        })) ||
+      undefined,
   });
 
   return schema;

@@ -20,9 +20,11 @@ data in proper places.
 
 ```ts
 // query.ts
-export function hello(): string {
-  return 'world!';
-}
+export const Query = {
+  hello() {
+    return 'world!';
+  },
+};
 ```
 
 2. Snapshot generator
@@ -30,17 +32,11 @@ export function hello(): string {
 JavaScript code doesn't provide any information about types at runtime. That's why we need to
 generate these from the source code using `typescript-graphql` CLI tool. Use
 
-`npx tsgc query.ts mutation.ts`
-
-<!-- tsgc [options] [file ...] -->
-
-### idea
-
-Instead of requiring paths here support a config file typescript-graphql.json or tsgconfig.json
+`npx tsgc query.ts`
 
 This will generate corresponding `*.graphql.json` files for you that are used at runtime.
 
-3. Entry points
+3. Entry point
 
 ```ts
 // app.ts
@@ -48,10 +44,8 @@ import { buildSchema } from 'typescript-graphql';
 import * as express from 'express';
 import { graphqlHTTP } from 'express-graphql';
 
-const schema = buildSchema({
-  queryModulePath: './query', // ts -> require(...)
-  mutationModulePath: './mutation', // ts -> require(...)
-  // ...
+const schema = buildSchemaFromCode({
+  modulePath: path.resolve(__dirname, './module'),
 });
 
 const app = express();
@@ -59,20 +53,10 @@ app.use(
   '/graphql',
   graphqlHTTP({
     schema: schema,
-    // rootValue: root,
     graphiql: true,
   })
 );
 app.listen(4000);
+
 console.log('Running a GraphQL API server at http://localhost:4000/graphql');
 ```
-
-## Plan of action
-
-1. Introspect existing TypeScript code to get all function exported from a given
-   model. These will be used for generating GraphQL Schema.
-
-## TODO
-
-1. Use https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API to translate a module into JSONable definition of declarations
-2. Use this information to produce schema at runtime for client Library (client provides options)

@@ -14,6 +14,7 @@ export interface DocEntry {
     name: string;
     type: string;
   }[];
+  retTypeIsArray?: boolean;
   param?: {
     typeName: string;
     objectProps: Record<string, string>;
@@ -114,26 +115,45 @@ function generateDocumentation(
 
   function serializeCallSignature(signature: ts.Signature) {
     let retTypeObjProps = undefined;
+    let retTypeIsArray = undefined;
 
-    const returnType = signature.getReturnType();
+    let returnType = signature.getReturnType();
+
     if (returnType.getFlags() === ts.TypeFlags.Object) {
       // NOTE: isClassOrInterface returns true for interface but false for type
-      const objectReturnType = returnType as ts.ObjectType;
-      // console.log('return type object flags', objectReturnType.objectFlags);
+      let objectReturnType = returnType as ts.ObjectType;
+
+      if (objectReturnType.objectFlags === ts.ObjectFlags.Reference) {
+        const refReturnType = objectReturnType as ts.TypeReference;
+
+        // assuming the reference is an array, subsitute it with the type
+        // argument
+        retTypeIsArray = true;
+        returnType = checker.getTypeArguments(
+          refReturnType
+        )![0] as ts.ObjectType;
+        objectReturnType = returnType as ts.ObjectType;
+      }
+
       retTypeObjProps = objectReturnType.getProperties().map((symbol) => ({
         name: symbol.getName(),
-        type: checker.typeToString(
-          checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration!)
-        ),
+        // type: checker.typeToString(
+        //   checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration!)
+        // ),
+        // hacky way to get type belo
+        type: symbol.valueDeclaration.getChildAt(2).getText(),
       }));
     }
 
     // checker.typeToTypeNode(signature.getReturnType(), undefined, undefined);
     return {
       parameters: signature.parameters.map(serializeParameterSymbol),
-      returnType: signature.declaration!.type?.getText(),
+      returnType:
+        signature.declaration!.type?.getText() ??
+        checker.typeToString(returnType),
       checkerReturnType: checker.typeToString(returnType),
       retTypeObjProps,
+      retTypeIsArray,
       documentation: ts.displayPartsToString(
         signature.getDocumentationComment(checker)
       ),

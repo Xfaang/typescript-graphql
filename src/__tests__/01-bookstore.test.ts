@@ -71,16 +71,18 @@ test('Bookstore module', async () => {
   });
 });
 
+// declare Book as a type
 type Book = {
   id: int;
   title: string;
   authorId: int;
 };
 
-type Author = {
+// declare Author as an interface
+interface Author {
   id: int;
   name: string;
-};
+}
 
 const booksDb: Book[] = [
   {

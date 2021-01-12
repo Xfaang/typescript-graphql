@@ -160,7 +160,8 @@ export function processFile(fileName: string): Record<string, DocEntry[]> {
       // NOTE: isClassOrInterface returns true for interface but false for type
       let objectReturnType = returnType as ts.ObjectType;
 
-      if (objectReturnType.objectFlags === ts.ObjectFlags.Reference) {
+      if (objectReturnType.getSymbol()?.name === 'Array') {
+        // if (objectReturnType.objectFlags === ts.ObjectFlags.Reference) {
         const refReturnType = objectReturnType as ts.TypeReference;
 
         // assuming the reference is an array, subsitute it with the type
@@ -177,7 +178,7 @@ export function processFile(fileName: string): Record<string, DocEntry[]> {
         // type: checker.typeToString(
         //   checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration!)
         // ),
-        // hacky way to get type belo
+        // hacky way to get type below
         type: symbol.valueDeclaration.getChildAt(2).getText(),
       }));
     }

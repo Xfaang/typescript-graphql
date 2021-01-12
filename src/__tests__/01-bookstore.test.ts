@@ -28,7 +28,7 @@ test('Bookstore module', async () => {
       """
       get all books of the given author
       """
-      books: Book
+      books: [Book]
     }
 
     type Book {
@@ -130,7 +130,7 @@ export function author(book: Book) {
 
 /** get all books of the given author */
 export function books(author: Author) {
-  return booksDb.find((book) => book.authorId === author.id);
+  return booksDb.filter((book) => book.authorId === author.id);
 }
 
 export const Query = {

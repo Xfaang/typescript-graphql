@@ -1,4 +1,5 @@
 import * as ts from 'typescript';
+import { getCompilerOptions } from './getCompilerOptions';
 
 export interface DocEntry {
   name?: string;
@@ -15,6 +16,8 @@ export interface DocEntry {
     type: string;
   }[];
   retTypeIsArray?: boolean;
+  retTypeIsNullable?: boolean;
+  retTypeIsOptional?: boolean;
   param?: {
     typeName: string;
     objectProps: Record<string, string>;
@@ -22,69 +25,73 @@ export interface DocEntry {
 }
 
 /** returns DocEntry objects to be stored as a type information dump */
-export function processFile(fileName: string) {
-  return generateDocumentation([fileName], {
-    target: ts.ScriptTarget.ES5, // ts.ScriptTarget.ES2015,
-    module: ts.ModuleKind.CommonJS,
-  });
-}
-
-/** Generate documentation for all classes in a set of .ts files */
-function generateDocumentation(
-  fileNames: string[],
-  options: ts.CompilerOptions
-): Record<string, DocEntry[]> {
-  // Build a program using the set of root file names in fileNames
-  let program = ts.createProgram(fileNames, options);
+export function processFile(fileName: string): Record<string, DocEntry[]> {
+  // Build a program using the provide fileName as the root file name
+  const program = ts.createProgram([fileName], getCompilerOptions());
 
   // Get the checker, we will use it to find more about classes
-  let checker = program.getTypeChecker();
-  let output: Record<string, DocEntry[]> = {};
+  const checker = program.getTypeChecker();
+  const output: Record<string, DocEntry[]> = {};
 
-  // Visit every sourceFile in the program
-  for (const sourceFile of program.getSourceFiles()) {
-    //
-    // TODO use program.getSourceFile
-    //
-    if (!fileNames.includes(sourceFile.fileName)) {
-      // skip non-root files
-      continue;
+  const sourceFile = program.getSourceFile(fileName);
+
+  if (!sourceFile) {
+    throw new Error(`Missing source file for ${fileName}`);
+  }
+
+  if (sourceFile.isDeclarationFile) {
+    throw new Error(
+      `Provided source file ${fileName} is a declaration and missing implementation`
+    );
+  }
+
+  const exportedSymbols = checker.getExportsOfModule(
+    checker.getSymbolAtLocation(sourceFile)!
+  );
+
+  exportedSymbols.forEach((exportedSymbol) => {
+    const exportedSymbolName = exportedSymbol.getName();
+    const exportedSymbolFlags = exportedSymbol.getFlags();
+    if (exportedSymbolFlags === ts.SymbolFlags.Alias) {
+      throw new Error(
+        `Symbol ${exportedSymbolName} is exported as an alias which is not
+supported yet. Please export the value directly.`
+      );
     }
 
-    if (sourceFile.isDeclarationFile) {
-      // skip declartion files
-      continue;
+    if (exportedSymbolFlags === ts.SymbolFlags.Function) {
+      // ignore exported functions
+      return;
     }
 
-    // console.log('visiting file', sourceFile.fileName);
+    if (exportedSymbolFlags !== ts.SymbolFlags.BlockScopedVariable) {
+      // ignore anything that is not a block scoped varialbe
+      return;
+    }
 
-    const exportedSymbols = checker.getExportsOfModule(
-      checker.getSymbolAtLocation(sourceFile)!
+    const { valueDeclaration } = exportedSymbol;
+
+    if (!valueDeclaration) {
+      throw new Error(
+        `Exported symbol ${exportedSymbolName} is missing value declaration`
+      );
+    }
+
+    const symbolType = checker.getTypeOfSymbolAtLocation(
+      exportedSymbol,
+      valueDeclaration
     );
 
-    exportedSymbols.forEach((exportedSymbol) => {
-      const { valueDeclaration } = exportedSymbol;
+    if (symbolType.getFlags() !== ts.TypeFlags.Object) {
+      // not an object type
+      return output;
+    }
 
-      if (!valueDeclaration) {
-        throw new Error(`Expecting value declaration in the exported symbol`);
-      }
-
-      const symbolType = checker.getTypeOfSymbolAtLocation(
-        exportedSymbol,
-        valueDeclaration
-      );
-
-      if (symbolType.getFlags() !== ts.TypeFlags.Object) {
-        // not an object type
-        return output;
-      }
-
-      const objectType = symbolType as ts.ObjectType;
-      output[exportedSymbol.name] = objectType
-        .getProperties()
-        .map((symbol) => serializeFunction(symbol));
-    });
-  }
+    const objectType = symbolType as ts.ObjectType;
+    output[exportedSymbol.name] = objectType
+      .getProperties()
+      .map((symbol) => serializeFunction(symbol));
+  });
 
   return output;
 
@@ -118,6 +125,36 @@ function generateDocumentation(
     let retTypeIsArray = undefined;
 
     let returnType = signature.getReturnType();
+
+    let retTypeIsNullable = false;
+    let retTypeIsOptional = false;
+
+    if (returnType.isUnion()) {
+      const otherReturnTypes = returnType.types.filter((type) => {
+        switch (type.getFlags()) {
+          case ts.TypeFlags.Null:
+            retTypeIsNullable = true;
+            return false;
+
+          case ts.TypeFlags.Undefined:
+            retTypeIsOptional = true;
+            return false;
+
+          default:
+            return true;
+        }
+      });
+
+      if (otherReturnTypes.length !== 1) {
+        throw new Error(
+          `Union return type of ${checker.typeToString(
+            returnType
+          )} is not supported`
+        );
+      }
+
+      [returnType] = otherReturnTypes;
+    }
 
     if (returnType.getFlags() === ts.TypeFlags.Object) {
       // NOTE: isClassOrInterface returns true for interface but false for type
@@ -154,6 +191,8 @@ function generateDocumentation(
       checkerReturnType: checker.typeToString(returnType),
       retTypeObjProps,
       retTypeIsArray,
+      retTypeIsNullable,
+      retTypeIsOptional,
       documentation: ts.displayPartsToString(
         signature.getDocumentationComment(checker)
       ),
@@ -198,25 +237,4 @@ function generateDocumentation(
       objectProps,
     };
   }
-}
-
-export function getCompilerOptions() {
-  const basePath = process.cwd();
-  const configFileName = ts.findConfigFile(
-    basePath,
-    ts.sys.fileExists,
-    'tsconfig.json'
-  );
-  if (!configFileName) {
-    throw new Error("Could not find a valid 'tsconfig.json'.");
-  }
-
-  const configFile = ts.readConfigFile(configFileName, ts.sys.readFile);
-  const { options } = ts.parseJsonConfigFileContent(
-    configFile.config,
-    ts.sys,
-    basePath
-  );
-
-  return options;
 }

@@ -1,4 +1,4 @@
-import { graphql, printSchema } from 'graphql';
+import { graphql } from 'graphql';
 import { buildSchemaFromCode } from '..';
 import { int } from '../types';
 import { gql } from './utils';
@@ -128,3 +128,7 @@ export const Query = {
 export const Book = {
   author,
 };
+
+// FIXME exporting an aliast this won't work currently
+// const Check = { check1() {} };
+// export { Check };

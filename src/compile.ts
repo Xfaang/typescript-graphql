@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { getCompilerOptions, processFile } from './processFile';
+import { getCompilerOptions } from './getCompilerOptions';
+import { processFile } from './processFile';
 
 export async function compile(files: string[], options: { watch?: boolean }) {
   const [filePath] = files;

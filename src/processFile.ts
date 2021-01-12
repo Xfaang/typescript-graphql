@@ -52,24 +52,24 @@ export function processFile(fileName: string): Record<string, DocEntry[]> {
   exportedSymbols.forEach((exportedSymbol) => {
     const exportedSymbolName = exportedSymbol.getName();
     const exportedSymbolFlags = exportedSymbol.getFlags();
-    if (exportedSymbolFlags === ts.SymbolFlags.Alias) {
-      throw new Error(
-        `Symbol ${exportedSymbolName} is exported as an alias which is not
-supported yet. Please export the value directly.`
-      );
-    }
 
     if (exportedSymbolFlags === ts.SymbolFlags.Function) {
       // ignore exported functions
       return;
     }
 
-    if (exportedSymbolFlags !== ts.SymbolFlags.BlockScopedVariable) {
+    let valueDeclaration: ts.Declaration | undefined = undefined;
+
+    if (exportedSymbolFlags === ts.SymbolFlags.Alias) {
+      valueDeclaration = exportedSymbol.getDeclarations()![0];
+    } else if (exportedSymbolFlags !== ts.SymbolFlags.BlockScopedVariable) {
       // ignore anything that is not a block scoped varialbe
       return;
     }
 
-    const { valueDeclaration } = exportedSymbol;
+    if (!valueDeclaration) {
+      ({ valueDeclaration } = exportedSymbol);
+    }
 
     if (!valueDeclaration) {
       throw new Error(

@@ -61,9 +61,14 @@ function getFieldConfigMapForModule({
         type = getTypeForString(call.returnType ?? call.checkerReturnType!);
       } else {
         const objectName = call.returnType!;
-
         if (!(objectName in knownTypes)) {
           const fields: graphql.GraphQLFieldConfigMap<any, any> = {};
+
+          knownTypes[objectName] = new graphql.GraphQLObjectType({
+            name: objectName,
+            fields,
+          });
+
           call.retTypeObjProps.forEach(({ name, type }) => {
             fields[name] = {
               type: getTypeForString(type),
@@ -82,11 +87,6 @@ function getFieldConfigMapForModule({
               })
             );
           }
-
-          knownTypes[objectName] = new graphql.GraphQLObjectType({
-            name: objectName,
-            fields,
-          });
         }
 
         type = knownTypes[objectName];
@@ -108,7 +108,10 @@ function getFieldConfigMapForModule({
     const fieldConfig: graphql.GraphQLFieldConfig<any, any> = {
       type: isArrayType ? new graphql.GraphQLList(type!) : type!,
       args,
-      description: declaration.documentation || undefined,
+      description:
+        declaration.documentation ||
+        declaration.calls?.[0].documentation ||
+        undefined,
       resolve(source, args, context, info) {
         return (module[fieldName][name] as Function).call(
           undefined,

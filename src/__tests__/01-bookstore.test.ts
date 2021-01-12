@@ -10,19 +10,35 @@ test('Bookstore module', async () => {
 
   expect(schema).toEqualSchema(gql`
     type Query {
+      """
+      get all authors
+      """
       getAuthors: [Author]
+
+      """
+      get all books
+      """
       getBooks: [Book]
     }
 
     type Author {
       id: Int
       name: String
+
+      """
+      get all books of the given author
+      """
+      books: Book
     }
 
     type Book {
       id: Int
       title: String
       authorId: Int
+
+      """
+      get the author of the given book
+      """
       author: Author
     }
   `);
@@ -120,15 +136,13 @@ export const Query = {
   getBooks,
 };
 
-// FIXME uncommenting this causes infinite loop
-// export const Author = {
-//   books,
-// };
+export const Author = {
+  books,
+};
 
-export const Book = {
+const Book = {
   author,
 };
 
-// FIXME exporting an aliast this won't work currently
-// const Check = { check1() {} };
-// export { Check };
+// export Book as an alias
+export { Book };

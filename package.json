@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xFAANG/typescript-graphql.git"
+    "url": "git+https://github.com/xFAANG/tsgraphql.git"
   },
   "keywords": [
     "TypeScript",
@@ -27,9 +27,9 @@
   "author": "xFAANG Marcin Hagmajer",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/xFAANG/typescript-graphql/issues"
+    "url": "https://github.com/xFAANG/tsgraphql/issues"
   },
-  "homepage": "https://github.com/xFAANG/typescript-graphql#readme",
+  "homepage": "https://github.com/xFAANG/tsgraphql#readme",
   "peerDependencies": {
     "graphql": "^14.7.0 || ^15.3.0",
     "typescript": ">4.0.0"

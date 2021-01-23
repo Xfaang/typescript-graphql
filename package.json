@@ -1,6 +1,6 @@
 {
-  "name": "tsgraphql",
-  "version": "0.0.10",
+  "name": "typescript-graphql",
+  "version": "0.0.9",
   "description": "Easiest way to convert TypeScript to GraphQL",
   "main": "./dist/index.js",
   "scripts": {
@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xFAANG/tsgraphql.git"
+    "url": "git+https://github.com/xFAANG/typescript-graphql.git"
   },
   "keywords": [
     "TypeScript",
@@ -27,9 +27,9 @@
   "author": "xFAANG Marcin Hagmajer",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/xFAANG/tsgraphql/issues"
+    "url": "https://github.com/xFAANG/typescript-graphql/issues"
   },
-  "homepage": "https://github.com/xFAANG/tsgraphql#readme",
+  "homepage": "https://github.com/xFAANG/typescript-graphql#readme",
   "peerDependencies": {
     "graphql": "^14.7.0 || ^15.3.0",
     "typescript": ">4.0.0"

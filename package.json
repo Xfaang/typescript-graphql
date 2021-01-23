@@ -1,5 +1,5 @@
 {
-  "name": "typescript-graphql",
+  "name": "tsgraphql",
   "version": "0.0.9",
   "description": "Easiest way to convert TypeScript to GraphQL",
   "main": "./dist/index.js",

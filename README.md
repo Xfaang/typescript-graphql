@@ -42,7 +42,7 @@ This will generate corresponding `*.graphql.json` files for you that are used at
 ```ts
 // app.ts
 
-import { buildSchema } from 'typescript-graphql';
+import { buildSchemaFromCode } from 'typescript-graphql';
 import * as express from 'express';
 import { graphqlHTTP } from 'express-graphql';
 
